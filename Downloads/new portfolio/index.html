@@ -1,0 +1,2011 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SANDY GRG — Frontend Developer &amp; Digital Designer (HKG)</title>
+
+  <!-- Google Fonts: Syne, Plus Jakarta Sans, Space Grotesk -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Space+Grotesk:wght@400;500;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Three.js r128 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['"Syne"', 'sans-serif'],
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"Space Grotesk"', 'monospace'],
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    /* =========================================================================
+       SWISS EDITORIAL DESIGN TOKENS (WARM ALABASTER & EDITORIAL CRIMSON)
+       ========================================================================= */
+    :root {
+      --bg-primary: #F3F2EE;
+      --bg-elevated: #EAE8E1;
+      --bg-glass: rgba(243, 242, 238, 0.82);
+      --ink-primary: #0D0D0D;
+      --ink-muted: #68665E;
+      --hairline: #D6D4CC;
+      --accent: #FF2414;
+      --pill-bg: #0D0D0D;
+      --pill-text: #F3F2EE;
+      --drawer-bg: #F3F2EE;
+    }
+
+    body.theme-crimson {
+      --bg-primary: #FF2414;
+      --bg-elevated: #E61D0E;
+      --bg-glass: rgba(255, 36, 20, 0.85);
+      --ink-primary: #0D0D0D;
+      --ink-muted: #3A0703;
+      --hairline: rgba(13, 13, 13, 0.28);
+      --accent: #F3F2EE;
+      --pill-bg: #0D0D0D;
+      --pill-text: #FF2414;
+      --drawer-bg: #F3F2EE;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      background-color: var(--bg-primary);
+      color: var(--ink-primary);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      transition: background-color 0.55s cubic-bezier(0.22, 1, 0.36, 1), color 0.45s ease;
+      overflow-x: hidden;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Architectural 1px Hairline Utilities */
+    .b-hairline { border-color: var(--hairline); }
+    .bt-1 { border-top: 1px solid var(--hairline); }
+    .bb-1 { border-bottom: 1px solid var(--hairline); }
+    .bl-1 { border-left: 1px solid var(--hairline); }
+    .br-1 { border-right: 1px solid var(--hairline); }
+    .b-all-1 { border: 1px solid var(--hairline); }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: var(--bg-primary); }
+    ::-webkit-scrollbar-thumb { background: var(--ink-primary); }
+
+    /* Subtle Tactile Paper Noise Overlay */
+    .paper-noise {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 95;
+      opacity: 0.035;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    }
+
+    /* Full-Viewport Fixed Three.js Canvas behind Hero */
+    #webgl-stage-wrap {
+      position: relative;
+      width: 100%;
+      height: 62vh;
+      min-height: 400px;
+      max-height: 680px;
+      cursor: grab;
+      touch-action: pan-y;
+    }
+    #webgl-stage-wrap:active {
+      cursor: grabbing;
+    }
+    #webgl-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Custom Magnetic Cursor Pill (Desktop Pointer) */
+    @media (pointer: fine) {
+      #magnetic-cursor-dot {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 8px;
+        height: 8px;
+        border-radius: 9999px;
+        background-color: var(--ink-primary);
+        pointer-events: none;
+        z-index: 9999;
+        transform: translate(-50%, -50%);
+        transition: width 0.22s ease, height 0.22s ease, opacity 0.2s ease;
+      }
+      #magnetic-cursor-pill {
+        position: fixed;
+        top: 0;
+        left: 0;
+        padding: 6px 13px;
+        border-radius: 9999px;
+        background-color: var(--pill-bg);
+        color: var(--pill-text);
+        font-family: 'Space Grotesk', monospace;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        pointer-events: none;
+        z-index: 9998;
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.82);
+        transition: opacity 0.2s ease, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+        white-space: nowrap;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.18);
+      }
+      #magnetic-cursor-pill.visible {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+      }
+    }
+
+    /* Masked Baseline Reveal Animations */
+    .mask-clip {
+      overflow: hidden;
+      display: block;
+    }
+    .mask-reveal-item {
+      display: block;
+      transform: translateY(108%);
+      transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: transform;
+    }
+    .mask-reveal-item.is-revealed {
+      transform: translateY(0%);
+    }
+
+    /* Kinetic Masthead Words */
+    .kinetic-masthead-line {
+      will-change: transform, letter-spacing;
+      transition: letter-spacing 0.15s ease-out;
+    }
+
+    /* Dual-Lane Opposing Marquee */
+    .marquee-lane {
+      display: flex;
+      width: max-content;
+      will-change: transform;
+    }
+
+    /* Floating 3D Perspective Card on Selected Works Hover */
+    #work-hover-card {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 320px;
+      height: 215px;
+      pointer-events: none;
+      z-index: 70;
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.84);
+      transition: opacity 0.26s ease, transform 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+      perspective: 1100px;
+    }
+    #work-hover-card.active {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+    #work-hover-card-inner {
+      width: 100%;
+      height: 100%;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid rgba(13, 13, 13, 0.25);
+      box-shadow: 0 28px 60px rgba(13, 13, 13, 0.22);
+      transform-style: preserve-3d;
+      will-change: transform;
+      background: #0D0D0D;
+    }
+
+    /* Accordion Smooth Expansion */
+    .exp-accordion-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .exp-accordion-item.open .exp-accordion-body {
+      max-height: 320px;
+    }
+    .exp-accordion-item.open .exp-plus {
+      transform: rotate(45deg);
+    }
+
+    /* Proximity-Reactive Footer Characters */
+    .cta-char {
+      display: inline-block;
+      will-change: transform, font-variation-settings;
+      transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), font-style 0.2s ease;
+    }
+
+    /* Full-Height Right-Aligned Case Study Drawer */
+    #case-drawer-backdrop {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s ease;
+    }
+    #case-drawer-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    #case-drawer-panel {
+      transform: translateX(100%);
+      transition: transform 0.48s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    #case-drawer-backdrop.open #case-drawer-panel {
+      transform: translateX(0%);
+    }
+  </style>
+</head>
+<body class="antialiased selection:bg-[#0D0D0D] selection:text-[#F3F2EE]">
+
+  <!-- Tactile Paper Grain -->
+  <div class="paper-noise"></div>
+
+  <!-- Custom Magnetic Cursor Dot & State Pill -->
+  <div id="magnetic-cursor-dot" class="hidden md:block"></div>
+  <div id="magnetic-cursor-pill" class="hidden md:block">VIEW</div>
+
+  <!-- Floating 3D Perspective Card for Selected Works Table -->
+  <div id="work-hover-card" class="hidden lg:block">
+    <div id="work-hover-card-inner">
+      <img id="work-hover-img" src="" alt="Project Preview" class="w-full h-full object-cover" />
+    </div>
+  </div>
+
+
+  <!-- =========================================================================
+       1. STICKY GLASS / HAIRLINE TOP NAVIGATION BAR
+       ========================================================================= -->
+  <header style="background-color: var(--bg-glass);" class="sticky top-0 z-50 backdrop-blur-md bb-1 transition-colors duration-500">
+    <div class="max-w-[1480px] mx-auto px-4 sm:px-8 h-14 flex items-center justify-between gap-4">
+      
+      <!-- Left: Brand Mark + Live HKT Studio Clock -->
+      <div class="flex items-center gap-4">
+        <a href="#hero" class="font-mono text-xs sm:text-sm font-bold tracking-[0.18em] uppercase flex items-center gap-2" data-cursor="TOP">
+          <span class="w-2 h-2 rounded-full bg-[#FF2414]" id="brand-pulse-dot"></span>
+          <span>SG // HKG</span>
+        </a>
+        <span class="hidden sm:inline-block h-3.5 w-[1px] bg-[var(--hairline)]"></span>
+        <div class="hidden sm:flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.14em]" style="color: var(--ink-muted);">
+          <span>HONG KONG</span>
+          <span id="live-hkt-clock" class="font-bold text-[var(--ink-primary)]">15:01:00 HKT</span>
+        </div>
+      </div>
+
+      <!-- Center: Quick Anchor Links -->
+      <nav class="hidden md:flex items-center gap-7 font-mono text-xs font-medium uppercase tracking-[0.16em]">
+        <a href="#about" class="hover:opacity-50 transition-opacity" data-cursor="ABOUT">About</a>
+        <a href="#works" class="hover:opacity-50 transition-opacity" data-cursor="INDEX">Works</a>
+        <a href="#experience" class="hover:opacity-50 transition-opacity" data-cursor="CAREER">Experience</a>
+        <a href="#contact" class="hover:opacity-50 transition-opacity" data-cursor="CONTACT">Contact</a>
+      </nav>
+
+      <!-- Right: ALABASTER / CRIMSON Interactive Switcher -->
+      <div class="flex items-center gap-3">
+        <button id="theme-switcher-btn" onclick="toggleEditorialTheme()" class="px-3.5 py-1.5 rounded-full b-all-1 font-mono text-[11px] font-bold uppercase tracking-[0.14em] flex items-center gap-2 hover:bg-black/5 transition-all" data-cursor="THEME" title="Switch between Warm Alabaster & Editorial Crimson">
+          <span id="theme-indicator-dot" class="w-2.5 h-2.5 rounded-full bg-[#FF2414] border border-black/30"></span>
+          <span id="theme-switcher-label">ALABASTER / CRIMSON</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+
+  <!-- =========================================================================
+       2. HERO SECTION — 3D WEBGL SHADER STAGE + KINETIC MASTHEAD
+       ========================================================================= -->
+  <main id="hero">
+    <section class="relative bb-1">
+      <div class="max-w-[1480px] mx-auto px-4 sm:px-8 pt-5 sm:pt-7 pb-8">
+
+        <!-- Top Editorial Coordinates Bar -->
+        <div class="flex flex-wrap items-center justify-between gap-2 pb-4 font-mono text-[11px] uppercase tracking-[0.16em]" style="color: var(--ink-muted);">
+          <div>FRONTEND DEVELOPER &amp; DIGITAL DESIGNER</div>
+          <div class="hidden md:block">22.3193&deg; N, 114.1694&deg; E &mdash; KOWLOON, HONG KONG</div>
+          <div class="flex items-center gap-2 font-bold text-[var(--ink-primary)]">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-ping"></span>
+            <span>AVAILABLE FOR Q4 / 2027 COMMISSIONS</span>
+          </div>
+        </div>
+
+        <!-- Full-Width Interactive Three.js WebGL Stage with Floating HUD Pills -->
+        <div id="webgl-stage-wrap" class="rounded-2xl b-all-1 relative overflow-hidden bg-black/[0.02]" data-cursor="DRAG">
+          
+          <!-- Floating HUD Pills: 3 Morphing 3D Formations -->
+          <div class="absolute top-3.5 left-3.5 right-3.5 z-20 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
+            <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 pointer-events-auto">
+              <button id="btn-form-ribbon" onclick="setFormation('ribbon')" style="background-color: var(--pill-bg); color: var(--pill-text);" class="formation-pill px-3.5 py-1.5 rounded-full font-mono text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.12em] transition-all shadow-sm">
+                01 / HELICAL RIBBON
+              </button>
+              <button id="btn-form-cluster" onclick="setFormation('cluster')" style="background-color: var(--bg-glass);" class="formation-pill px-3.5 py-1.5 rounded-full b-all-1 backdrop-blur-md font-mono text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.12em] transition-all hover:bg-black/5">
+                02 / SPATIAL CLUSTER
+              </button>
+              <button id="btn-form-filmstrip" onclick="setFormation('filmstrip')" style="background-color: var(--bg-glass);" class="formation-pill px-3.5 py-1.5 rounded-full b-all-1 backdrop-blur-md font-mono text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.12em] transition-all hover:bg-black/5">
+                03 / CURVED FILMSTRIP
+              </button>
+            </div>
+
+            <!-- Live Raycasted Card Telemetry Pill -->
+            <div style="background-color: var(--bg-glass);" class="hidden lg:flex items-center gap-2 px-3.5 py-1.5 rounded-full b-all-1 backdrop-blur-md font-mono text-[11px] uppercase tracking-[0.12em]">
+              <span style="color: var(--ink-muted);">FOCUSED PLANE:</span>
+              <span id="hud-focused-card" class="font-bold">01 — MONDRAGON WEBGL</span>
+            </div>
+          </div>
+
+          <!-- Bottom HUD Interaction Hint -->
+          <div class="absolute bottom-3.5 left-4 right-4 z-20 flex items-center justify-between font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.14em] pointer-events-none" style="color: var(--ink-muted);">
+            <span>DRAG TO ORBIT &bull; SCROLL TO TWIST SHADER</span>
+            <button onclick="openCaseDrawer(currentFocusedIndex)" class="pointer-events-auto font-bold text-[var(--ink-primary)] underline underline-offset-4 hover:opacity-65">
+              INSPECT ACTIVE CASE [01–05] &nearr;
+            </button>
+          </div>
+
+          <!-- Three.js WebGL Canvas -->
+          <canvas id="webgl-canvas"></canvas>
+        </div>
+
+        <!-- Edge-to-Edge Kinetic Masthead ('SANDY GRG') with Masked Baseline Reveal -->
+        <div class="pt-5 sm:pt-7 select-none overflow-hidden">
+          <h1 id="kinetic-masthead" class="font-display font-extrabold uppercase leading-[0.86] tracking-[-0.045em] text-[13.5vw] sm:text-[12.8vw] xl:text-[176px] text-center whitespace-nowrap kinetic-masthead-line">
+            <span class="mask-clip">
+              <span class="mask-reveal-item" id="hero-reveal-word">SANDY GRG</span>
+            </span>
+          </h1>
+        </div>
+
+        <!-- Editorial Sub-Masthead Grid -->
+        <div class="mt-5 pt-5 bt-1 grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+          <div class="md:col-span-7 text-sm sm:text-base leading-relaxed max-w-2xl">
+            Engineering high-craft web architecture, custom GLSL/WebGL spatial interfaces, and kinetic typography systems where Swiss grid clarity meets tactile 60fps motion.
+          </div>
+          <div class="md:col-span-5 flex flex-wrap md:justify-end items-center gap-3 font-mono text-xs uppercase tracking-[0.14em]">
+            <a href="#works" style="background-color: var(--pill-bg); color: var(--pill-text);" class="px-5 py-2.5 rounded-full font-bold hover:scale-[1.03] transition-transform" data-cursor="INDEX">
+              EXPLORE INDEX (05)
+            </a>
+            <button onclick="openCaseDrawer(0)" class="px-5 py-2.5 rounded-full b-all-1 font-bold hover:bg-black/5 transition-colors" data-cursor="VIEW">
+              CASE STUDY 01 &nearr;
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- =========================================================================
+         3. DUAL-LANE OPPOSING VELOCITY-REACTIVE MARQUEE BANNER
+         ========================================================================= -->
+    <section class="bb-1 py-4 sm:py-5 overflow-hidden select-none" style="background-color: var(--bg-elevated);">
+      <!-- Lane 1 (Moves Left by default, accelerates & flips on scroll) -->
+      <div id="marquee-lane-1" class="marquee-lane items-center gap-6 font-display font-extrabold text-2xl sm:text-4xl uppercase tracking-[-0.02em] pb-2">
+        <span>INTERACTIVE 3D / WEBGL</span>
+        <span class="text-[#FF2414]" id="marquee-dot-1">&bull;</span>
+        <span>SWISS EDITORIAL GRIDS</span>
+        <span class="text-[#FF2414]">&bull;</span>
+        <span>GLSL SHADER SYSTEMS</span>
+        <span class="text-[#FF2414]">&bull;</span>
+        <span>KINETIC TYPOGRAPHY</span>
+        <span class="text-[#FF2414]">&bull;</span>
+        <!-- Seamless Loop Clone -->
+        <span>INTERACTIVE 3D / WEBGL</span>
+        <span class="text-[#FF2414]">&bull;</span>
+        <span>SWISS EDITORIAL GRIDS</span>
+        <span class="text-[#FF2414]">&bull;</span>
+        <span>GLSL SHADER SYSTEMS</span>
+        <span class="text-[#FF2414]">&bull;</span>
+        <span>KINETIC TYPOGRAPHY</span>
+        <span class="text-[#FF2414]">&bull;</span>
+      </div>
+
+      <!-- Lane 2 (Opposing Direction) -->
+      <div id="marquee-lane-2" class="marquee-lane items-center gap-6 font-mono text-xs sm:text-sm font-bold uppercase tracking-[0.22em]" style="color: var(--ink-muted);">
+        <span>DESIGN SYSTEMS &amp; FIGMA ARCHITECTURE</span>
+        <span>//</span>
+        <span>60FPS HARDWARE ACCELERATED</span>
+        <span>//</span>
+        <span>HONG KONG DIGITAL DESIGN STUDIO</span>
+        <span>//</span>
+        <span>CREATIVE FRONTEND ENGINEERING</span>
+        <span>//</span>
+        <!-- Seamless Loop Clone -->
+        <span>DESIGN SYSTEMS &amp; FIGMA ARCHITECTURE</span>
+        <span>//</span>
+        <span>60FPS HARDWARE ACCELERATED</span>
+        <span>//</span>
+        <span>HONG KONG DIGITAL DESIGN STUDIO</span>
+        <span>//</span>
+        <span>CREATIVE FRONTEND ENGINEERING</span>
+        <span>//</span>
+      </div>
+    </section>
+
+
+    <!-- =========================================================================
+         4. ABOUT ME — ASYMMETRIC SWISS GRID & CAPABILITIES MATRIX
+         ========================================================================= -->
+    <section id="about" class="bb-1">
+      <div class="max-w-[1480px] mx-auto grid grid-cols-1 lg:grid-cols-12">
+        
+        <!-- Left Column (5 Cols): Discipline Header & Studio Telemetry Stats -->
+        <div class="lg:col-span-5 p-6 sm:p-10 lg:p-12 lg:br-1 flex flex-col justify-between gap-10">
+          <div class="space-y-4">
+            <div class="font-mono text-xs font-bold uppercase tracking-[0.18em]" style="color: var(--ink-muted);">
+              01 // STUDIO MANIFESTO
+            </div>
+            <h2 class="font-display font-extrabold text-3xl sm:text-5xl uppercase tracking-[-0.03em] leading-[0.98]">
+              Precision Engineering &amp; Spatial Motion.
+            </h2>
+          </div>
+
+          <!-- Studio Stats Grid -->
+          <div class="grid grid-cols-2 bt-1 bl-1">
+            <div class="p-5 br-1 bb-1">
+              <div class="font-display font-extrabold text-3xl sm:text-4xl">05+</div>
+              <div class="font-mono text-[11px] uppercase tracking-[0.14em] mt-1" style="color: var(--ink-muted);">
+                Years Shipping Web
+              </div>
+            </div>
+            <div class="p-5 br-1 bb-1">
+              <div class="font-display font-extrabold text-3xl sm:text-4xl">60FPS</div>
+              <div class="font-mono text-[11px] uppercase tracking-[0.14em] mt-1" style="color: var(--ink-muted);">
+                WebGL &amp; DOM Motion
+              </div>
+            </div>
+            <div class="p-5 br-1 bb-1">
+              <div class="font-display font-extrabold text-3xl sm:text-4xl">+38%</div>
+              <div class="font-mono text-[11px] uppercase tracking-[0.14em] mt-1" style="color: var(--ink-muted);">
+                Avg. Conversion Lift
+              </div>
+            </div>
+            <div class="p-5 br-1 bb-1">
+              <div class="font-display font-extrabold text-3xl sm:text-4xl">HKG</div>
+              <div class="font-mono text-[11px] uppercase tracking-[0.14em] mt-1" style="color: var(--ink-muted);">
+                UTC+8 Global Reach
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column (7 Cols): Masked Line-by-Line Reveal Manifesto + 4 Capabilities -->
+        <div class="lg:col-span-7 p-6 sm:p-10 lg:p-12 flex flex-col justify-between gap-12">
+          
+          <!-- Masked Line-by-Line Manifesto -->
+          <div id="manifesto-lines" class="space-y-1.5 text-xl sm:text-2xl md:text-[26px] font-medium leading-[1.34] tracking-[-0.015em]">
+            <span class="mask-clip"><span class="mask-reveal-item">Based in Hong Kong, I partner with ambitious founders,</span></span>
+            <span class="mask-clip"><span class="mask-reveal-item">design-led studios, and SaaS teams to build unforgettable</span></span>
+            <span class="mask-clip"><span class="mask-reveal-item">web experiences. By uniting Swiss typographic hierarchy</span></span>
+            <span class="mask-clip"><span class="mask-reveal-item">with custom WebGL shaders and keyframe motion, every</span></span>
+            <span class="mask-clip"><span class="mask-reveal-item">interface feels tactile, responsive, and unmistakably distinct.</span></span>
+          </div>
+
+          <!-- 2x2 Core Capabilities Matrix -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 bt-1 bl-1">
+            <div class="p-6 br-1 bb-1 hover:bg-black/[0.025] transition-colors">
+              <div class="font-mono text-[11px] font-bold uppercase tracking-[0.16em] mb-2" style="color: var(--ink-muted);">
+                [01] SPATIAL WEB
+              </div>
+              <h3 class="font-display font-bold text-lg uppercase mb-2">Interactive 3D / WebGL</h3>
+              <p class="text-xs sm:text-sm leading-relaxed" style="color: var(--ink-muted);">
+                Custom Three.js scenes, GLSL vertex/fragment shaders, raycasted 3D product showcases, and zero-bloat procedural textures.
+              </p>
+            </div>
+
+            <div class="p-6 br-1 bb-1 hover:bg-black/[0.025] transition-colors">
+              <div class="font-mono text-[11px] font-bold uppercase tracking-[0.16em] mb-2" style="color: var(--ink-muted);">
+                [02] ARCHITECTURE
+              </div>
+              <h3 class="font-display font-bold text-lg uppercase mb-2">Frontend Engineering</h3>
+              <p class="text-xs sm:text-sm leading-relaxed" style="color: var(--ink-muted);">
+                Semantic HTML5, modular CSS architecture, responsive Swiss grids, and vanilla JS micro-interactions engineered for 99+ Lighthouse scores.
+              </p>
+            </div>
+
+            <div class="p-6 br-1 bb-1 hover:bg-black/[0.025] transition-colors">
+              <div class="font-mono text-[11px] font-bold uppercase tracking-[0.16em] mb-2" style="color: var(--ink-muted);">
+                [03] CHOREOGRAPHY
+              </div>
+              <h3 class="font-display font-bold text-lg uppercase mb-2">Motion &amp; Keyframing</h3>
+              <p class="text-xs sm:text-sm leading-relaxed" style="color: var(--ink-muted);">
+                Scroll-velocity physics, kinetic typography, custom spring-damped cursors, and high-retention motion reels in After Effects.
+              </p>
+            </div>
+
+            <div class="p-6 br-1 bb-1 hover:bg-black/[0.025] transition-colors">
+              <div class="font-mono text-[11px] font-bold uppercase tracking-[0.16em] mb-2" style="color: var(--ink-muted);">
+                [04] SCALABILITY
+              </div>
+              <h3 class="font-display font-bold text-lg uppercase mb-2">Design Systems</h3>
+              <p class="text-xs sm:text-sm leading-relaxed" style="color: var(--ink-muted);">
+                Multi-theme design tokens, accessible UI component kits, and documented Figma-to-code pipelines built for rapid product teams.
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+
+    <!-- =========================================================================
+         5. SELECTED WORKS — 1PX-RULED INDEX TABLE (01–05) + 3D HOVER CARD
+         ========================================================================= -->
+    <section id="works" class="bb-1">
+      <div class="max-w-[1480px] mx-auto px-4 sm:px-8 py-16 sm:py-24">
+        
+        <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-10 bb-1">
+          <div>
+            <div class="font-mono text-xs font-bold uppercase tracking-[0.18em] mb-2" style="color: var(--ink-muted);">
+              02 // SELECTED INDEX (2024 &mdash; 2026)
+            </div>
+            <h2 class="font-display font-extrabold text-4xl sm:text-6xl uppercase tracking-[-0.035em] leading-none">
+              Selected Works
+            </h2>
+          </div>
+          <div class="font-mono text-xs uppercase tracking-[0.14em] max-w-xs" style="color: var(--ink-muted);">
+            Hover any row for spring-damped 3D card preview &bull; Click to open Case Study Drawer
+          </div>
+        </div>
+
+        <!-- 1px-Ruled Index Table (01 - 05) -->
+        <div class="divide-y divide-[var(--hairline)] bb-1">
+          
+          <!-- Project 01 -->
+          <article class="work-table-row group py-7 sm:py-9 px-2 sm:px-4 grid grid-cols-12 items-center gap-4 cursor-pointer hover:bg-black/[0.03] transition-colors" data-work-idx="0" data-cursor="VIEW" onclick="openCaseDrawer(0)">
+            <div class="col-span-2 sm:col-span-1 font-mono text-xs sm:text-sm font-bold" style="color: var(--ink-muted);">01</div>
+            <div class="col-span-10 sm:col-span-5">
+              <h3 class="font-display font-extrabold text-2xl sm:text-4xl uppercase tracking-[-0.025em] group-hover:translate-x-2.5 transition-transform duration-300">
+                MONDRAGON WEBGL
+              </h3>
+            </div>
+            <div class="col-span-8 sm:col-span-4 font-mono text-xs uppercase tracking-[0.12em]" style="color: var(--ink-muted);">
+              3D Helical Ribbon &amp; Creative Agency System
+            </div>
+            <div class="col-span-4 sm:col-span-2 flex items-center justify-end gap-3 font-mono text-xs font-bold">
+              <span>2026</span>
+              <span class="w-8 h-8 rounded-full b-all-1 flex items-center justify-center group-hover:bg-[#0D0D0D] group-hover:text-[#F3F2EE] transition-colors">&nearr;</span>
+            </div>
+          </article>
+
+          <!-- Project 02 -->
+          <article class="work-table-row group py-7 sm:py-9 px-2 sm:px-4 grid grid-cols-12 items-center gap-4 cursor-pointer hover:bg-black/[0.03] transition-colors" data-work-idx="1" data-cursor="VIEW" onclick="openCaseDrawer(1)">
+            <div class="col-span-2 sm:col-span-1 font-mono text-xs sm:text-sm font-bold" style="color: var(--ink-muted);">02</div>
+            <div class="col-span-10 sm:col-span-5">
+              <h3 class="font-display font-extrabold text-2xl sm:text-4xl uppercase tracking-[-0.025em] group-hover:translate-x-2.5 transition-transform duration-300">
+                NIKA EDITORIAL OS
+              </h3>
+            </div>
+            <div class="col-span-8 sm:col-span-4 font-mono text-xs uppercase tracking-[0.12em]" style="color: var(--ink-muted);">
+              Crimson Brutalist Lookbook &amp; Typography Grid
+            </div>
+            <div class="col-span-4 sm:col-span-2 flex items-center justify-end gap-3 font-mono text-xs font-bold">
+              <span>2026</span>
+              <span class="w-8 h-8 rounded-full b-all-1 flex items-center justify-center group-hover:bg-[#0D0D0D] group-hover:text-[#F3F2EE] transition-colors">&nearr;</span>
+            </div>
+          </article>
+
+          <!-- Project 03 -->
+          <article class="work-table-row group py-7 sm:py-9 px-2 sm:px-4 grid grid-cols-12 items-center gap-4 cursor-pointer hover:bg-black/[0.03] transition-colors" data-work-idx="2" data-cursor="VIEW" onclick="openCaseDrawer(2)">
+            <div class="col-span-2 sm:col-span-1 font-mono text-xs sm:text-sm font-bold" style="color: var(--ink-muted);">03</div>
+            <div class="col-span-10 sm:col-span-5">
+              <h3 class="font-display font-extrabold text-2xl sm:text-4xl uppercase tracking-[-0.025em] group-hover:translate-x-2.5 transition-transform duration-300">
+                AURA TELEMETRY
+              </h3>
+            </div>
+            <div class="col-span-8 sm:col-span-4 font-mono text-xs uppercase tracking-[0.12em]" style="color: var(--ink-muted);">
+              B2B SaaS Design System &amp; Conversion Flagship
+            </div>
+            <div class="col-span-4 sm:col-span-2 flex items-center justify-end gap-3 font-mono text-xs font-bold">
+              <span>2025</span>
+              <span class="w-8 h-8 rounded-full b-all-1 flex items-center justify-center group-hover:bg-[#0D0D0D] group-hover:text-[#F3F2EE] transition-colors">&nearr;</span>
+            </div>
+          </article>
+
+          <!-- Project 04 -->
+          <article class="work-table-row group py-7 sm:py-9 px-2 sm:px-4 grid grid-cols-12 items-center gap-4 cursor-pointer hover:bg-black/[0.03] transition-colors" data-work-idx="3" data-cursor="VIEW" onclick="openCaseDrawer(3)">
+            <div class="col-span-2 sm:col-span-1 font-mono text-xs sm:text-sm font-bold" style="color: var(--ink-muted);">04</div>
+            <div class="col-span-10 sm:col-span-5">
+              <h3 class="font-display font-extrabold text-2xl sm:text-4xl uppercase tracking-[-0.025em] group-hover:translate-x-2.5 transition-transform duration-300">
+                CANTONESE IN MOTION
+              </h3>
+            </div>
+            <div class="col-span-8 sm:col-span-4 font-mono text-xs uppercase tracking-[0.12em]" style="color: var(--ink-muted);">
+              Kinetic Typography &amp; Idiom Visual Series
+            </div>
+            <div class="col-span-4 sm:col-span-2 flex items-center justify-end gap-3 font-mono text-xs font-bold">
+              <span>2025</span>
+              <span class="w-8 h-8 rounded-full b-all-1 flex items-center justify-center group-hover:bg-[#0D0D0D] group-hover:text-[#F3F2EE] transition-colors">&nearr;</span>
+            </div>
+          </article>
+
+          <!-- Project 05 -->
+          <article class="work-table-row group py-7 sm:py-9 px-2 sm:px-4 grid grid-cols-12 items-center gap-4 cursor-pointer hover:bg-black/[0.03] transition-colors" data-work-idx="4" data-cursor="VIEW" onclick="openCaseDrawer(4)">
+            <div class="col-span-2 sm:col-span-1 font-mono text-xs sm:text-sm font-bold" style="color: var(--ink-muted);">05</div>
+            <div class="col-span-10 sm:col-span-5">
+              <h3 class="font-display font-extrabold text-2xl sm:text-4xl uppercase tracking-[-0.025em] group-hover:translate-x-2.5 transition-transform duration-300">
+                FILMSTRIP ARCHIVE
+              </h3>
+            </div>
+            <div class="col-span-8 sm:col-span-4 font-mono text-xs uppercase tracking-[0.12em]" style="color: var(--ink-muted);">
+              Cylindrical Spatial Gallery &amp; Shader Lab
+            </div>
+            <div class="col-span-4 sm:col-span-2 flex items-center justify-end gap-3 font-mono text-xs font-bold">
+              <span>2024</span>
+              <span class="w-8 h-8 rounded-full b-all-1 flex items-center justify-center group-hover:bg-[#0D0D0D] group-hover:text-[#F3F2EE] transition-colors">&nearr;</span>
+            </div>
+          </article>
+
+        </div>
+
+        <!-- Mobile / Tablet Responsive Thumbnail Strip -->
+        <div class="mt-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
+          <button onclick="openCaseDrawer(0)" class="text-left rounded-xl b-all-1 overflow-hidden group">
+            <div class="aspect-[16/10] bg-black overflow-hidden">
+              <img id="mobile-thumb-0" alt="Mondragon WebGL" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+            </div>
+            <div class="p-2.5 font-mono text-[10px] font-bold uppercase tracking-[0.12em] flex justify-between">
+              <span>01. MONDRAGON</span>
+              <span style="color: var(--ink-muted);">WEBGL</span>
+            </div>
+          </button>
+          <button onclick="openCaseDrawer(1)" class="text-left rounded-xl b-all-1 overflow-hidden group">
+            <div class="aspect-[16/10] bg-black overflow-hidden">
+              <img id="mobile-thumb-1" alt="Nika Editorial OS" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+            </div>
+            <div class="p-2.5 font-mono text-[10px] font-bold uppercase tracking-[0.12em] flex justify-between">
+              <span>02. NIKA OS</span>
+              <span style="color: var(--ink-muted);">EDITORIAL</span>
+            </div>
+          </button>
+          <button onclick="openCaseDrawer(2)" class="text-left rounded-xl b-all-1 overflow-hidden group">
+            <div class="aspect-[16/10] bg-black overflow-hidden">
+              <img id="mobile-thumb-2" alt="Aura Telemetry" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+            </div>
+            <div class="p-2.5 font-mono text-[10px] font-bold uppercase tracking-[0.12em] flex justify-between">
+              <span>03. AURA SAAS</span>
+              <span style="color: var(--ink-muted);">SYSTEM</span>
+            </div>
+          </button>
+          <button onclick="openCaseDrawer(3)" class="text-left rounded-xl b-all-1 overflow-hidden group">
+            <div class="aspect-[16/10] bg-black overflow-hidden">
+              <img id="mobile-thumb-3" alt="Cantonese in Motion" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+            </div>
+            <div class="p-2.5 font-mono text-[10px] font-bold uppercase tracking-[0.12em] flex justify-between">
+              <span>04. CANTONESE</span>
+              <span style="color: var(--ink-muted);">MOTION</span>
+            </div>
+          </button>
+          <button onclick="openCaseDrawer(4)" class="col-span-2 sm:col-span-1 text-left rounded-xl b-all-1 overflow-hidden group">
+            <div class="aspect-[16/10] bg-black overflow-hidden">
+              <img id="mobile-thumb-4" alt="Filmstrip Archive" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+            </div>
+            <div class="p-2.5 font-mono text-[10px] font-bold uppercase tracking-[0.12em] flex justify-between">
+              <span>05. FILMSTRIP</span>
+              <span style="color: var(--ink-muted);">SHADERS</span>
+            </div>
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- =========================================================================
+         6. CAREER & EXPERIENCE SPINE (EXPANDABLE ACCORDION ROWS)
+         ========================================================================= -->
+    <section id="experience" class="bb-1">
+      <div class="max-w-[1480px] mx-auto px-4 sm:px-8 py-16 sm:py-24">
+        
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+          <!-- Left Header -->
+          <div class="lg:col-span-4 space-y-4">
+            <div class="font-mono text-xs font-bold uppercase tracking-[0.18em]" style="color: var(--ink-muted);">
+              03 // CAREER &amp; EXPERIENCE SPINE
+            </div>
+            <h2 class="font-display font-extrabold text-3xl sm:text-5xl uppercase tracking-[-0.03em] leading-[1.0]">
+              Roles &amp; Track Record
+            </h2>
+            <p class="text-sm leading-relaxed pt-1" style="color: var(--ink-muted);">
+              Select any career milestone to expand deliverables, architectural ownership, and impact metrics.
+            </p>
+          </div>
+
+          <!-- Right Accordion List -->
+          <div class="lg:col-span-8 bt-1 divide-y divide-[var(--hairline)] bb-1">
+            
+            <!-- Milestone 01 -->
+            <div class="exp-accordion-item open py-6 px-3 hover:bg-black/[0.025] transition-colors cursor-pointer" onclick="toggleExpAccordion(this)">
+              <div class="flex items-start sm:items-center justify-between gap-4">
+                <div>
+                  <div class="font-mono text-[11px] font-bold uppercase tracking-[0.15em]" style="color: var(--ink-muted);">
+                    2024 &mdash; PRESENT &bull; HONG KONG / GLOBAL REMOTE
+                  </div>
+                  <h3 class="font-display font-bold text-xl sm:text-2xl uppercase mt-1">
+                    Independent Frontend &amp; Creative WebGL Designer
+                  </h3>
+                </div>
+                <span class="exp-plus font-mono text-2xl font-normal transition-transform duration-300">+</span>
+              </div>
+              <div class="exp-accordion-body">
+                <div class="pt-4 space-y-3">
+                  <p class="text-sm leading-relaxed max-w-2xl">
+                    Architecting flagship marketing websites, interactive Three.js product stages, and scalable Figma-to-code design systems for international SaaS companies and boutique design agencies.
+                  </p>
+                  <div class="flex flex-wrap gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.12em]">
+                    <span class="px-3 py-1 rounded-full b-all-1">Three.js &amp; GLSL Shaders</span>
+                    <span class="px-3 py-1 rounded-full b-all-1">B2B Design Systems</span>
+                    <span class="px-3 py-1 rounded-full b-all-1">+38% Conversion Lift</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Milestone 02 -->
+            <div class="exp-accordion-item py-6 px-3 hover:bg-black/[0.025] transition-colors cursor-pointer" onclick="toggleExpAccordion(this)">
+              <div class="flex items-start sm:items-center justify-between gap-4">
+                <div>
+                  <div class="font-mono text-[11px] font-bold uppercase tracking-[0.15em]" style="color: var(--ink-muted);">
+                    2022 &mdash; 2024 &bull; KOWLOON, HONG KONG
+                  </div>
+                  <h3 class="font-display font-bold text-xl sm:text-2xl uppercase mt-1">
+                    Senior UI/UX &amp; Interactive Frontend Developer
+                  </h3>
+                </div>
+                <span class="exp-plus font-mono text-2xl font-normal transition-transform duration-300">+</span>
+              </div>
+              <div class="exp-accordion-body">
+                <div class="pt-4 space-y-3">
+                  <p class="text-sm leading-relaxed max-w-2xl">
+                    Led responsive web engineering and kinetic interaction design across 20+ commercial launches. Standardized component token libraries and cut average page load times by 46% through zero-dependency DOM animations.
+                  </p>
+                  <div class="flex flex-wrap gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.12em]">
+                    <span class="px-3 py-1 rounded-full b-all-1">Figma Component Architecture</span>
+                    <span class="px-3 py-1 rounded-full b-all-1">Scroll Choreography</span>
+                    <span class="px-3 py-1 rounded-full b-all-1">99 Lighthouse Perf</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Milestone 03 -->
+            <div class="exp-accordion-item py-6 px-3 hover:bg-black/[0.025] transition-colors cursor-pointer" onclick="toggleExpAccordion(this)">
+              <div class="flex items-start sm:items-center justify-between gap-4">
+                <div>
+                  <div class="font-mono text-[11px] font-bold uppercase tracking-[0.15em]" style="color: var(--ink-muted);">
+                    2021 &mdash; PRESENT &bull; HONG KONG DIGITAL STUDIO
+                  </div>
+                  <h3 class="font-display font-bold text-xl sm:text-2xl uppercase mt-1">
+                    Motion Designer &amp; Visual Storyteller
+                  </h3>
+                </div>
+                <span class="exp-plus font-mono text-2xl font-normal transition-transform duration-300">+</span>
+              </div>
+              <div class="exp-accordion-body">
+                <div class="pt-4 space-y-3">
+                  <p class="text-sm leading-relaxed max-w-2xl">
+                    Produced high-retention kinetic typography reels and visual language explainers—including the Cantonese in Motion series—combining precision After Effects keyframe curves, rhythmic sound design, and editorial framing.
+                  </p>
+                  <div class="flex flex-wrap gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.12em]">
+                    <span class="px-3 py-1 rounded-full b-all-1">Kinetic Typography</span>
+                    <span class="px-3 py-1 rounded-full b-all-1">After Effects &amp; CapCut Pro</span>
+                    <span class="px-3 py-1 rounded-full b-all-1">1.2M+ Organic Views</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- =========================================================================
+         7. CONTACT TERMINAL & PROXIMITY-REACTIVE FOOTER ('LET'S BUILD')
+         ========================================================================= -->
+    <footer id="contact" class="pt-16 sm:pt-24 pb-10">
+      <div class="max-w-[1480px] mx-auto px-4 sm:px-8">
+        
+        <!-- Proximity-Reactive Footer CTA Headline -->
+        <div class="pb-10 bb-1 select-none overflow-hidden">
+          <div class="font-mono text-xs font-bold uppercase tracking-[0.18em] mb-3" style="color: var(--ink-muted);">
+            04 // CONTACT TERMINAL &amp; COLLABORATION
+          </div>
+          <h2 id="proximity-cta" class="font-display font-extrabold uppercase leading-[0.88] tracking-[-0.045em] text-[13.5vw] sm:text-[12vw] xl:text-[164px] cursor-default">
+            LET'S BUILD
+          </h2>
+        </div>
+
+        <!-- Two-Column Contact Terminal -->
+        <div class="py-12 grid grid-cols-1 lg:grid-cols-12 gap-12 bb-1">
+          
+          <!-- Left: Direct Email Copy + Social Channels -->
+          <div class="lg:col-span-5 flex flex-col justify-between gap-8">
+            <div class="space-y-5">
+              <p class="text-base sm:text-lg leading-relaxed max-w-md">
+                Have a flagship product launch, interactive 3D web concept, or design system sprint in mind? Let's engineer something remarkable.
+              </p>
+
+              <!-- One-Click Email Copy Pill -->
+              <div>
+                <button onclick="copyStudioEmail()" style="background-color: var(--pill-bg); color: var(--pill-text);" class="px-6 py-3.5 rounded-full font-mono text-xs font-bold uppercase tracking-[0.14em] inline-flex items-center gap-3 hover:scale-[1.02] active:scale-[0.98] transition-transform shadow-md" data-cursor="COPY">
+                  <span>hello@sandygrg.studio</span>
+                  <span class="px-2 py-0.5 rounded-full bg-white/15 text-[10px]">COPY</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Social Links & Coordinates -->
+            <div class="pt-6 bt-1 grid grid-cols-2 gap-4 font-mono text-xs uppercase tracking-[0.14em]">
+              <div>
+                <div class="text-[10px] mb-1" style="color: var(--ink-muted);">LOCATION</div>
+                <div class="font-bold">Kowloon, Hong Kong</div>
+              </div>
+              <div>
+                <div class="text-[10px] mb-1" style="color: var(--ink-muted);">CHANNELS</div>
+                <div class="flex flex-wrap gap-3 font-bold">
+                  <a href="#hero" class="hover:opacity-50 transition-opacity">GITHUB</a>
+                  <a href="#hero" class="hover:opacity-50 transition-opacity">X / TW</a>
+                  <a href="#hero" class="hover:opacity-50 transition-opacity">IG</a>
+                  <a href="#hero" class="hover:opacity-50 transition-opacity">LINKEDIN</a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Interactive Project Inquiry Form -->
+          <div class="lg:col-span-7">
+            <form onsubmit="handleInquirySubmit(event)" class="space-y-5">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                  <label class="block font-mono text-[11px] font-bold uppercase tracking-[0.15em] mb-2" style="color: var(--ink-muted);">
+                    01 / NAME
+                  </label>
+                  <input type="text" required placeholder="Maya Lin" class="w-full px-4 py-3.5 rounded-xl b-all-1 bg-transparent text-sm focus:outline-none focus:ring-1 focus:ring-current" />
+                </div>
+                <div>
+                  <label class="block font-mono text-[11px] font-bold uppercase tracking-[0.15em] mb-2" style="color: var(--ink-muted);">
+                    02 / EMAIL
+                  </label>
+                  <input type="email" required placeholder="maya@studio.io" class="w-full px-4 py-3.5 rounded-xl b-all-1 bg-transparent text-sm focus:outline-none focus:ring-1 focus:ring-current" />
+                </div>
+              </div>
+
+              <div>
+                <label class="block font-mono text-[11px] font-bold uppercase tracking-[0.15em] mb-2" style="color: var(--ink-muted);">
+                  03 / PROJECT BRIEF
+                </label>
+                <textarea rows="3" required placeholder="Tell me about your timeline, scope (3D WebGL, Frontend Architecture, Design System), and goals..." class="w-full px-4 py-3.5 rounded-xl b-all-1 bg-transparent text-sm focus:outline-none focus:ring-1 focus:ring-current resize-none"></textarea>
+              </div>
+
+              <div class="flex items-center justify-between gap-4">
+                <span class="font-mono text-[11px] uppercase tracking-[0.12em]" style="color: var(--ink-muted);">
+                  AVERAGE RESPONSE TIME: &lt; 24H
+                </span>
+                <button type="submit" id="inquiry-btn" style="background-color: var(--pill-bg); color: var(--pill-text);" class="px-7 py-3.5 rounded-full font-mono text-xs font-bold uppercase tracking-[0.14em] hover:scale-[1.03] transition-transform">
+                  TRANSMIT BRIEF &rarr;
+                </button>
+              </div>
+            </form>
+          </div>
+
+        </div>
+
+        <!-- Colophon -->
+        <div class="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 font-mono text-[11px] uppercase tracking-[0.14em]" style="color: var(--ink-muted);">
+          <div>&copy; 2026 SANDY GRG. ALL RIGHTS RESERVED.</div>
+          <div>THREE.JS R128 CUSTOM GLSL &bull; SWISS EDITORIAL SYSTEM</div>
+        </div>
+
+      </div>
+    </footer>
+  </main>
+
+
+  <!-- =========================================================================
+       8. FULL-HEIGHT CASE STUDY DRAWER (SLIDE-OVER INSPECTOR)
+       ========================================================================= -->
+  <div id="case-drawer-backdrop" class="fixed inset-0 z-[110] bg-black/70 backdrop-blur-sm flex justify-end" onclick="if(event.target === this) closeCaseDrawer()">
+    <aside id="case-drawer-panel" style="background-color: var(--drawer-bg);" class="w-full max-w-2xl h-full overflow-y-auto text-[#0D0D0D] bl-1 shadow-2xl flex flex-col justify-between">
+      
+      <div>
+        <!-- Drawer Sticky Header -->
+        <div class="sticky top-0 z-20 px-6 sm:px-8 py-4 bg-[#F3F2EE]/95 backdrop-blur-md border-b border-[#D6D4CC] flex items-center justify-between">
+          <div class="font-mono text-xs font-bold uppercase tracking-[0.16em] flex items-center gap-2">
+            <span id="drawer-index">CASE 01</span>
+            <span class="text-[#68665E]">/</span>
+            <span id="drawer-year" class="text-[#68665E]">2026</span>
+          </div>
+          <button onclick="closeCaseDrawer()" class="px-4 py-1.5 rounded-full bg-[#0D0D0D] text-[#F3F2EE] font-mono text-[11px] font-bold uppercase tracking-[0.12em] hover:opacity-80 transition-opacity">
+            CLOSE [ESC]
+          </button>
+        </div>
+
+        <!-- Drawer Content -->
+        <div class="p-6 sm:p-10 space-y-8">
+          <div class="space-y-2">
+            <div id="drawer-category" class="font-mono text-xs font-bold uppercase tracking-[0.16em] text-[#FF2414]">
+              3D HELICAL RIBBON &amp; CREATIVE AGENCY SYSTEM
+            </div>
+            <h3 id="drawer-title" class="font-display font-extrabold text-3xl sm:text-5xl uppercase tracking-[-0.03em] leading-none">
+              MONDRAGON WEBGL
+            </h3>
+          </div>
+
+          <!-- High-DPI Procedural Artwork Banner -->
+          <div class="rounded-xl overflow-hidden border border-[#D6D4CC] aspect-[16/10] bg-black shadow-md">
+            <img id="drawer-artwork" alt="Case Study Artwork" class="w-full h-full object-cover" />
+          </div>
+
+          <!-- Metrics & Stack Grid -->
+          <div class="grid grid-cols-3 gap-4 py-5 border-y border-[#D6D4CC] font-mono">
+            <div>
+              <div class="text-[10px] uppercase tracking-[0.14em] text-[#68665E]">ROLE</div>
+              <div id="drawer-role" class="text-xs sm:text-sm font-bold mt-1">Creative WebGL Dev</div>
+            </div>
+            <div>
+              <div class="text-[10px] uppercase tracking-[0.14em] text-[#68665E]">IMPACT</div>
+              <div id="drawer-metric" class="text-xs sm:text-sm font-bold mt-1">+44% Engagement</div>
+            </div>
+            <div>
+              <div class="text-[10px] uppercase tracking-[0.14em] text-[#68665E]">FRAME BUDGET</div>
+              <div class="text-xs sm:text-sm font-bold mt-1">60 FPS Locked</div>
+            </div>
+          </div>
+
+          <!-- Project Overview & Architecture -->
+          <div class="space-y-4">
+            <h4 class="font-mono text-xs font-bold uppercase tracking-[0.16em] text-[#68665E]">
+              01 // OVERVIEW &amp; ART DIRECTION
+            </h4>
+            <p id="drawer-overview" class="text-sm sm:text-base leading-relaxed text-[#222222]"></p>
+          </div>
+
+          <div class="space-y-4">
+            <h4 class="font-mono text-xs font-bold uppercase tracking-[0.16em] text-[#68665E]">
+              02 // TECHNICAL ARCHITECTURE
+            </h4>
+            <p id="drawer-architecture" class="text-sm sm:text-base leading-relaxed text-[#222222]"></p>
+          </div>
+
+          <!-- Tech Stack Pills -->
+          <div class="space-y-3">
+            <h4 class="font-mono text-xs font-bold uppercase tracking-[0.16em] text-[#68665E]">
+              03 // TECH STACK
+            </h4>
+            <div id="drawer-stack" class="flex flex-wrap gap-2 font-mono text-xs font-bold uppercase tracking-[0.1em]"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Drawer Footer Navigation -->
+      <div class="px-6 sm:px-8 py-5 border-t border-[#D6D4CC] bg-[#EAE8E1] flex items-center justify-between font-mono text-xs font-bold uppercase tracking-[0.14em]">
+        <button onclick="navigateDrawer(-1)" class="hover:opacity-60 transition-opacity">&larr; PREV PROJECT</button>
+        <button onclick="navigateDrawer(1)" class="px-5 py-2.5 rounded-full bg-[#0D0D0D] text-[#F3F2EE] hover:opacity-85 transition-opacity">NEXT PROJECT &rarr;</button>
+      </div>
+
+    </aside>
+  </div>
+
+
+  <!-- Toast Notification -->
+  <div id="toast-banner" class="fixed bottom-5 right-5 z-[130] px-5 py-3 rounded-full bg-[#0D0D0D] text-[#F3F2EE] font-mono text-xs font-bold uppercase tracking-[0.14em] shadow-2xl transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none">
+    COPIED TO CLIPBOARD
+  </div>
+
+
+  <!-- =========================================================================
+       JAVASCRIPT ENGINE:
+       1. High-DPI Procedural HTML5 Canvas Textures (Zero Broken Images)
+       2. Three.js r128 Custom GLSL Vertex & Fragment Shaders + 3 Formations
+       3. Scroll-Velocity Kinetic Typography & Dual-Lane Marquee
+       4. Magnetic Cursor, Spring 3D Hover Card, Case Study Drawer & HKT Clock
+       ========================================================================= -->
+  <script>
+    /* =========================================================================
+       1. CURATED PROJECT DATA & PROCEDURAL HIGH-DPI CANVAS ARTWORKS
+       ========================================================================= */
+    const CASE_STUDIES = [
+      {
+        index: 'CASE 01',
+        title: 'MONDRAGON WEBGL',
+        category: '3D HELICAL RIBBON & CREATIVE AGENCY SYSTEM',
+        year: '2026',
+        role: 'Creative Frontend & GLSL',
+        metric: '+44% Avg. Session Time',
+        overview: 'Reimagining the digital agency portfolio as a continuous 3D helical ribbon of interactive media planes. Visitors twist, orbit, and inspect projects directly in WebGL space without jarring page reloads.',
+        architecture: 'Engineered with Three.js r128 custom vertex wave shaders and signed-distance-field (SDF) rounded-corner fragment clipping. Pointer velocity dynamically drives RGB chromatic dispersion across active planes.',
+        stack: ['Three.js r128', 'Custom GLSL', 'HTML5 Canvas', 'Swiss Grid CSS']
+      },
+      {
+        index: 'CASE 02',
+        title: 'NIKA EDITORIAL OS',
+        category: 'CRIMSON BRUTALIST LOOKBOOK & TYPOGRAPHY GRID',
+        year: '2026',
+        role: 'Art Direction & Frontend',
+        metric: '99/100 Lighthouse Score',
+        overview: 'An unapologetic high-contrast Swiss editorial system pairing razor-sharp 1px hairline grids with vibrant crimson (#FF2414) surfaces, kinetic mastheads, and zero-latency theme inversion.',
+        architecture: 'Built on CSS custom property token inheritance synchronized with WebGL uniform color interpolation so both DOM and 3D canvas shift seamlessly in a single frame.',
+        stack: ['CSS Custom Tokens', 'Kinetic Typography', 'Vanilla JS', 'WebGL Uniforms']
+      },
+      {
+        index: 'CASE 03',
+        title: 'AURA TELEMETRY',
+        category: 'B2B SAAS DESIGN SYSTEM & CONVERSION FLAGSHIP',
+        year: '2025',
+        role: 'Lead UI/UX & Frontend',
+        metric: '+38% Demo Conversion',
+        overview: 'Transformed an enterprise telemetry platform from dense tables into an editorial, crystal-clear product narrative with live interactive metric modules and tactile micro-interactions.',
+        architecture: 'Architected an 80-component Figma token library paired with semantic HTML5 and hardware-accelerated CSS transforms for instant responsiveness across mobile and desktop.',
+        stack: ['Figma Design System', 'Semantic HTML5', 'Tailwind CSS', 'Interactive UI']
+      },
+      {
+        index: 'CASE 04',
+        title: 'CANTONESE IN MOTION',
+        category: 'KINETIC TYPOGRAPHY & IDIOM VISUAL SERIES',
+        year: '2025',
+        role: 'Motion Director & Designer',
+        metric: '1.2M+ Organic Views',
+        overview: 'A Hong Kong visual culture series translating expressive Cantonese idioms into rhythmic kinetic typography reels with custom ease-out keyframe curves and editorial framing.',
+        architecture: 'Designed a modular 9:16 and 16:9 typographic motion grid in After Effects and CapCut Pro, establishing instant visual hooks within the first 2.5 seconds.',
+        stack: ['After Effects', 'CapCut Pro', 'Kinetic Type', 'Sound Design']
+      },
+      {
+        index: 'CASE 05',
+        title: 'FILMSTRIP ARCHIVE',
+        category: 'CYLINDRICAL SPATIAL GALLERY & SHADER LAB',
+        year: '2024',
+        role: 'Design Technologist',
+        metric: '0ms Asset Load Latency',
+        overview: 'A concave cylindrical 3D filmstrip gallery inspired by analog darkroom contact sheets and modern spatial computing interfaces.',
+        architecture: 'All gallery plates are synthesized procedurally via high-DPI HTML5 2D Canvas pipelines, eliminating external image CORS issues and guaranteeing instant rendering.',
+        stack: ['Procedural Canvas 2D', 'Raycasting 3D', 'Spring Physics', 'GLSL SDF']
+      }
+    ];
+
+    // Generate 16 distinct high-DPI procedural editorial textures (first 5 match CASE_STUDIES)
+    function generateProceduralPoster(variant) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1024;
+      canvas.height = 720;
+      const ctx = canvas.getContext('2d');
+
+      const mode = variant % 8;
+
+      if (mode === 0) {
+        // 01: MONDRAGON — Deep Cobalt, Obsidian & Crimson Orbital Sculpture
+        const g = ctx.createLinearGradient(0, 0, 1024, 720);
+        g.addColorStop(0, '#0B0F19');
+        g.addColorStop(0.55, '#1E3A6E');
+        g.addColorStop(1, '#FF2414');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, 1024, 720);
+
+        const glow = ctx.createRadialGradient(680, 290, 20, 650, 310, 320);
+        glow.addColorStop(0, '#FFF1EB');
+        glow.addColorStop(0.4, '#FF2414');
+        glow.addColorStop(1, 'rgba(11,15,25,0)');
+        ctx.fillStyle = glow;
+        ctx.fillRect(0, 0, 1024, 720);
+
+        ctx.strokeStyle = 'rgba(243,242,238,0.28)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(48, 48, 928, 624);
+        ctx.beginPath();
+        ctx.moveTo(48, 138); ctx.lineTo(976, 138);
+        ctx.stroke();
+
+        ctx.fillStyle = '#F3F2EE';
+        ctx.font = '700 22px "Space Grotesk", monospace';
+        ctx.fillText('01 // MONDRAGON 3D RIBBON', 74, 102);
+        ctx.font = '800 96px "Syne", sans-serif';
+        ctx.fillText('HELICAL', 72, 520);
+        ctx.fillText('WEBGL', 72, 616);
+
+      } else if (mode === 1) {
+        // 02: NIKA EDITORIAL OS — Pure Signal Crimson (#FF2414) & Stark Ink
+        ctx.fillStyle = '#FF2414';
+        ctx.fillRect(0, 0, 1024, 720);
+
+        ctx.strokeStyle = '#0D0D0D';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(44, 44, 936, 632);
+        ctx.beginPath();
+        ctx.moveTo(44, 140); ctx.lineTo(980, 140);
+        ctx.moveTo(540, 140); ctx.lineTo(540, 676);
+        ctx.stroke();
+
+        // Dark editorial portrait frame on left
+        ctx.fillStyle = '#0D0D0D';
+        ctx.fillRect(76, 176, 430, 464);
+        ctx.fillStyle = '#FF2414';
+        ctx.beginPath();
+        ctx.arc(291, 365, 118, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#0D0D0D';
+        ctx.font = '700 22px "Space Grotesk", monospace';
+        ctx.fillText('02 // NIKA EDITORIAL SYSTEM', 74, 100);
+        ctx.font = '800 84px "Syne", sans-serif';
+        ctx.fillText('NIKA', 572, 275);
+        ctx.fillText('GRID', 572, 365);
+        ctx.font = '700 24px "Space Grotesk", monospace';
+        ctx.fillText('SWISS BRUTALIST OS', 572, 620);
+
+      } else if (mode === 2) {
+        // 03: AURA TELEMETRY — Warm Alabaster & Precision UI Analytics
+        ctx.fillStyle = '#F3F2EE';
+        ctx.fillRect(0, 0, 1024, 720);
+
+        ctx.strokeStyle = '#0D0D0D';
+        ctx.lineWidth = 2.5;
+        ctx.strokeRect(44, 44, 936, 632);
+
+        ctx.fillStyle = '#0D0D0D';
+        ctx.fillRect(80, 170, 500, 340);
+
+        const heights = [110, 175, 140, 230, 275, 205];
+        heights.forEach((h, i) => {
+          ctx.fillStyle = i === 4 ? '#FF2414' : '#F3F2EE';
+          ctx.fillRect(118 + i * 72, 475 - h, 46, h);
+        });
+
+        ctx.fillStyle = '#EAE8E1';
+        ctx.fillRect(612, 170, 332, 340);
+        ctx.fillStyle = '#0D0D0D';
+        ctx.font = '800 88px "Syne", sans-serif';
+        ctx.fillText('+38%', 642, 315);
+        ctx.font = '700 22px "Space Grotesk", monospace';
+        ctx.fillText('CONVERSION LIFT', 642, 368);
+
+        ctx.fillText('03 // AURA B2B TELEMETRY', 80, 105);
+        ctx.font = '800 42px "Syne", sans-serif';
+        ctx.fillText('FIGMA + FRONTEND ARCHITECTURE', 80, 610);
+
+      } else if (mode === 3) {
+        // 04: CANTONESE IN MOTION — Obsidian & Kinetic Keyframe Track
+        ctx.fillStyle = '#0D0D0D';
+        ctx.fillRect(0, 0, 1024, 720);
+
+        ctx.strokeStyle = '#FF2414';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(48, 48, 928, 624);
+
+        ctx.fillStyle = '#F3F2EE';
+        ctx.font = '700 22px "Space Grotesk", monospace';
+        ctx.fillText('04 // HONG KONG MOTION LAB', 82, 108);
+
+        ctx.fillStyle = '#FF2414';
+        ctx.font = '800 124px "Syne", sans-serif';
+        ctx.fillText('KINETIC', 78, 315);
+        ctx.fillStyle = '#F3F2EE';
+        ctx.font = '800 104px "Syne", sans-serif';
+        ctx.fillText('MOTION', 78, 428);
+
+        // Keyframe diamonds
+        ctx.strokeStyle = 'rgba(243,242,238,0.35)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(82, 560); ctx.lineTo(942, 560);
+        ctx.stroke();
+
+        [180, 410, 640, 850].forEach((x, idx) => {
+          ctx.save();
+          ctx.translate(x, 560);
+          ctx.rotate(Math.PI / 4);
+          ctx.fillStyle = idx === 2 ? '#FF2414' : '#F3F2EE';
+          ctx.fillRect(-13, -13, 26, 26);
+          ctx.restore();
+        });
+
+      } else if (mode === 4) {
+        // 05: FILMSTRIP ARCHIVE — Warm Stone Architectural Geometry
+        const g = ctx.createLinearGradient(0, 0, 1024, 720);
+        g.addColorStop(0, '#E8E5DC');
+        g.addColorStop(1, '#CFCBC0');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, 1024, 720);
+
+        ctx.fillStyle = '#0D0D0D';
+        ctx.beginPath();
+        ctx.arc(512, 355, 200, Math.PI, 0);
+        ctx.lineTo(712, 595);
+        ctx.lineTo(312, 595);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = '#FF2414';
+        ctx.beginPath();
+        ctx.arc(512, 330, 86, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#0D0D0D';
+        ctx.font = '700 22px "Space Grotesk", monospace';
+        ctx.fillText('05 // FILMSTRIP ARCHIVE', 56, 88);
+        ctx.font = '800 46px "Syne", sans-serif';
+        ctx.fillText('CYLINDRICAL GALLERY', 56, 662);
+
+      } else if (mode === 5) {
+        // 06: Swiss Typographic Poster Specimen
+        ctx.fillStyle = '#141414';
+        ctx.fillRect(0, 0, 1024, 720);
+        ctx.fillStyle = '#F3F2EE';
+        ctx.font = '800 185px "Syne", sans-serif';
+        ctx.fillText('HKG', 60, 250);
+        ctx.fillStyle = '#FF2414';
+        ctx.fillText('2026', 60, 445);
+        ctx.fillStyle = '#F3F2EE';
+        ctx.font = '700 24px "Space Grotesk", monospace';
+        ctx.fillText('22.3193° N // 114.1694° E — SPATIAL UI', 68, 635);
+
+      } else if (mode === 6) {
+        // 07: Iridescent Shader Spectrum Plate
+        const g = ctx.createLinearGradient(0, 0, 1024, 720);
+        g.addColorStop(0, '#FF2414');
+        g.addColorStop(0.5, '#0D0D0D');
+        g.addColorStop(1, '#3B82F6');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, 1024, 720);
+
+        ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+        ctx.lineWidth = 2;
+        for (let i = 0; i < 8; i++) {
+          ctx.strokeRect(70 + i * 26, 70 + i * 18, 884 - i * 52, 580 - i * 36);
+        }
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = '800 54px "Syne", sans-serif';
+        ctx.fillText('GLSL DISPERSION', 110, 380);
+
+      } else {
+        // 08: Minimalist Swiss Grid Specimen
+        ctx.fillStyle = '#F3F2EE';
+        ctx.fillRect(0, 0, 1024, 720);
+        ctx.strokeStyle = '#0D0D0D';
+        ctx.lineWidth = 2;
+        for (let x = 128; x < 1024; x += 128) {
+          ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 720); ctx.stroke();
+        }
+        for (let y = 120; y < 720; y += 120) {
+          ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(1024, y); ctx.stroke();
+        }
+        ctx.fillStyle = '#FF2414';
+        ctx.beginPath();
+        ctx.arc(512, 360, 150, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#0D0D0D';
+        ctx.font = '800 64px "Syne", sans-serif';
+        ctx.fillText('SWISS GRID', 300, 382);
+      }
+
+      return canvas;
+    }
+
+    // Generate 16 procedural canvases & data URLs
+    const TOTAL_CARDS = 16;
+    const proceduralCanvases = Array.from({ length: TOTAL_CARDS }, (_, i) => generateProceduralPoster(i));
+    const caseDataURLs = CASE_STUDIES.map((_, i) => proceduralCanvases[i].toDataURL('image/png'));
+
+    // Populate mobile thumbnails
+    for (let i = 0; i < 5; i++) {
+      const img = document.getElementById(`mobile-thumb-${i}`);
+      if (img) img.src = caseDataURLs[i];
+    }
+
+
+    /* =========================================================================
+       2. THREE.JS r128 CUSTOM GLSL SHADER STAGE + 3 MORPHING FORMATIONS
+       ========================================================================= */
+    const stageWrap = document.getElementById('webgl-stage-wrap');
+    const webglCanvas = document.getElementById('webgl-canvas');
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(42, stageWrap.clientWidth / stageWrap.clientHeight, 0.1, 100);
+    camera.position.set(0, 0, 12.6);
+
+    const renderer = new THREE.WebGLRenderer({
+      canvas: webglCanvas,
+      alpha: true,
+      antialias: true,
+      powerPreference: 'high-performance'
+    });
+    renderer.setSize(stageWrap.clientWidth, stageWrap.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    // Custom GLSL Vertex Shader: subtle real-time wave undulation
+    const CARD_VERTEX_SHADER = `
+      uniform float uTime;
+      uniform float uWaveAmp;
+      uniform float uHover;
+      varying vec2 vUv;
+      varying float vElevation;
+
+      void main() {
+        vUv = uv;
+        vec3 pos = position;
+
+        // Subtle organic cloth/ribbon wave driven by time & hover state
+        float wave = sin(pos.x * 2.4 + uTime * 2.2) * cos(pos.y * 2.0 + uTime * 1.6);
+        pos.z += wave * (uWaveAmp + uHover * 0.05);
+        vElevation = wave;
+
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+      }
+    `;
+
+    // Custom GLSL Fragment Shader: Rounded-Corner SDF clipping, Pointer-Velocity RGB Chromatic Aberration & Hover Boost
+    const CARD_FRAGMENT_SHADER = `
+      uniform sampler2D uTexture;
+      uniform float uHover;
+      uniform float uAberration;
+      uniform float uAspect;
+      uniform float uRadius;
+      uniform vec3 uBorderColor;
+      varying vec2 vUv;
+      varying float vElevation;
+
+      // Signed Distance Function for Rounded Box
+      float roundedBoxSDF(vec2 centerPos, vec2 size, float radius) {
+        return length(max(abs(centerPos) - size + radius, 0.0)) - radius;
+      }
+
+      void main() {
+        // Aspect-corrected coordinates centered at (0,0)
+        vec2 uvCentered = (vUv - 0.5) * vec2(uAspect, 1.0);
+        vec2 halfBox = vec2(uAspect * 0.5, 0.5);
+        float dist = roundedBoxSDF(uvCentered, halfBox, uRadius);
+
+        // Smooth anti-aliased alpha cutoff at rounded edges
+        float alpha = 1.0 - smoothstep(-0.008, 0.004, dist);
+        if (alpha < 0.01) discard;
+
+        // Pointer-velocity-driven RGB chromatic dispersion
+        vec2 dir = (vUv - 0.5) * uAberration;
+        float r = texture2D(uTexture, clamp(vUv + dir, 0.002, 0.998)).r;
+        float g = texture2D(uTexture, vUv).g;
+        float b = texture2D(uTexture, clamp(vUv - dir, 0.002, 0.998)).b;
+        vec3 texColor = vec3(r, g, b);
+
+        // Subtle edge vignette & hover brightness boost
+        float vig = 1.0 - dot(vUv - 0.5, vUv - 0.5) * 0.28;
+        texColor *= vig;
+        texColor += uHover * 0.08 + vElevation * 0.025;
+
+        // Crisp 1px architectural border inside the rounded edge
+        float borderMask = smoothstep(-0.022, -0.012, dist) * (1.0 - smoothstep(-0.006, 0.0, dist));
+        vec3 finalColor = mix(texColor, uBorderColor, borderMask * 0.65);
+
+        gl_FragColor = vec4(finalColor, alpha);
+      }
+    `;
+
+    // Create Three.js CanvasTextures & ShaderMaterials for all 16 cards
+    const cardWidth = 2.45;
+    const cardHeight = 1.72;
+    const cardAspect = cardWidth / cardHeight;
+    const sharedPlaneGeo = new THREE.PlaneGeometry(cardWidth, cardHeight, 20, 14);
+
+    const galleryPivot = new THREE.Group();
+    scene.add(galleryPivot);
+
+    const cardMeshes = [];
+    const shaderMaterials = [];
+
+    for (let i = 0; i < TOTAL_CARDS; i++) {
+      const texture = new THREE.CanvasTexture(proceduralCanvases[i]);
+      texture.minFilter = THREE.LinearFilter;
+      texture.magFilter = THREE.LinearFilter;
+
+      const shaderMat = new THREE.ShaderMaterial({
+        vertexShader: CARD_VERTEX_SHADER,
+        fragmentShader: CARD_FRAGMENT_SHADER,
+        transparent: true,
+        side: THREE.DoubleSide,
+        uniforms: {
+          uTexture: { value: texture },
+          uTime: { value: i * 0.45 },
+          uWaveAmp: { value: 0.035 },
+          uHover: { value: 0.0 },
+          uAberration: { value: 0.004 },
+          uAspect: { value: cardAspect },
+          uRadius: { value: 0.075 },
+          uBorderColor: { value: new THREE.Color('#0D0D0D') }
+        }
+      });
+
+      const mesh = new THREE.Mesh(sharedPlaneGeo, shaderMat);
+      mesh.userData = {
+        cardIndex: i,
+        caseIndex: i % CASE_STUDIES.length,
+        targetPos: new THREE.Vector3(),
+        targetRot: new THREE.Euler(),
+        targetScale: 1.0,
+        hoverLerp: 0.0
+      };
+
+      galleryPivot.add(mesh);
+      cardMeshes.push(mesh);
+      shaderMaterials.push(shaderMat);
+    }
+
+    // 3 Morphing Formation State & Physics
+    let activeFormation = 'ribbon'; // 'ribbon' | 'cluster' | 'filmstrip'
+    let currentFocusedIndex = 0;
+    let orbitAngle = 0;
+    let orbitVelocity = 0.0036;
+    let isPointerDown = false;
+    let prevClientX = 0;
+    let prevClientY = 0;
+    let totalDragDist = 0;
+    let pointerVelocityMag = 0;
+
+    // Spatial Cluster coordinates (overlapping floating 3D planes suspended in perspective depth)
+    const clusterCoords = [
+      { pos: [-2.1, 0.95, 0.8], rot: [0.14, 0.38, -0.12], scale: 1.18 },
+      { pos: [1.95, 0.55, 1.35], rot: [-0.1, -0.42, 0.14], scale: 1.24 },
+      { pos: [-0.35, -0.95, 0.5], rot: [-0.22, 0.18, 0.2], scale: 1.15 },
+      { pos: [1.55, -1.05, -0.4], rot: [0.18, -0.32, -0.18], scale: 1.08 },
+      { pos: [-2.85, -0.75, -0.6], rot: [0.24, 0.45, 0.15], scale: 1.04 },
+      { pos: [0.15, 1.35, -0.8], rot: [0.28, -0.08, -0.06], scale: 1.02 },
+      { pos: [3.2, 0.1, -1.2], rot: [-0.15, -0.55, 0.1], scale: 0.95 },
+      { pos: [-3.4, 0.25, -1.4], rot: [0.12, 0.55, -0.14], scale: 0.95 }
+    ];
+
+    function setFormation(mode) {
+      activeFormation = mode;
+      const btns = {
+        ribbon: document.getElementById('btn-form-ribbon'),
+        cluster: document.getElementById('btn-form-cluster'),
+        filmstrip: document.getElementById('btn-form-filmstrip')
+      };
+
+      Object.entries(btns).forEach(([key, btn]) => {
+        if (!btn) return;
+        if (key === mode) {
+          btn.style.backgroundColor = 'var(--pill-bg)';
+          btn.style.color = 'var(--pill-text)';
+          btn.classList.remove('b-all-1');
+        } else {
+          btn.style.backgroundColor = 'var(--bg-glass)';
+          btn.style.color = 'var(--ink-primary)';
+          btn.classList.add('b-all-1');
+        }
+      });
+    }
+
+    // True 3D Raycasting & Drag-to-Rotate with Momentum/Inertia
+    const raycaster = new THREE.Raycaster();
+    const pointerNDC = new THREE.Vector2(-99, -99);
+    let raycastedMesh = null;
+
+    function syncPointerNDC(clientX, clientY) {
+      const rect = stageWrap.getBoundingClientRect();
+      pointerNDC.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+      pointerNDC.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+    }
+
+    stageWrap.addEventListener('pointerdown', (e) => {
+      isPointerDown = true;
+      prevClientX = e.clientX;
+      prevClientY = e.clientY;
+      totalDragDist = 0;
+      syncPointerNDC(e.clientX, e.clientY);
+    });
+
+    window.addEventListener('pointermove', (e) => {
+      const rect = stageWrap.getBoundingClientRect();
+      const insideStage = e.clientY >= rect.top && e.clientY <= rect.bottom;
+      if (insideStage) {
+        syncPointerNDC(e.clientX, e.clientY);
+      } else if (!isPointerDown) {
+        pointerNDC.set(-99, -99);
+      }
+
+      const dx = e.clientX - prevClientX;
+      const dy = e.clientY - prevClientY;
+      pointerVelocityMag = Math.min(1.0, Math.hypot(dx, dy) * 0.025);
+
+      if (isPointerDown) {
+        totalDragDist += Math.hypot(dx, dy);
+        orbitVelocity = dx * 0.0024;
+        galleryPivot.rotation.x += dy * 0.0025;
+        galleryPivot.rotation.x = Math.max(-0.42, Math.min(0.42, galleryPivot.rotation.x));
+      }
+
+      prevClientX = e.clientX;
+      prevClientY = e.clientY;
+    });
+
+    window.addEventListener('pointerup', (e) => {
+      if (isPointerDown && totalDragDist < 6) {
+        syncPointerNDC(e.clientX, e.clientY);
+        raycaster.setFromCamera(pointerNDC, camera);
+        const hits = raycaster.intersectObjects(cardMeshes, false);
+        if (hits.length > 0) {
+          openCaseDrawer(hits[0].object.userData.caseIndex);
+        }
+      }
+      isPointerDown = false;
+    });
+
+    // Responsive WebGL Viewport Resize
+    function onWebGLResize() {
+      if (!stageWrap) return;
+      const w = stageWrap.clientWidth;
+      const h = stageWrap.clientHeight;
+      camera.aspect = w / h;
+      camera.position.z = w < 640 ? 15.6 : 12.6;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    }
+    window.addEventListener('resize', onWebGLResize);
+    onWebGLResize();
+
+    // Main 60FPS WebGL Render Loop
+    const webglClock = new THREE.Clock();
+    const hudFocusedLabel = document.getElementById('hud-focused-card');
+    const cursorPillEl = document.getElementById('magnetic-cursor-pill');
+
+    function renderWebGL() {
+      requestAnimationFrame(renderWebGL);
+      const t = webglClock.getElapsedTime();
+
+      // Momentum & inertia decay
+      if (!isPointerDown) {
+        orbitVelocity += (0.0034 - orbitVelocity) * 0.04;
+      }
+      orbitAngle += orbitVelocity;
+      pointerVelocityMag *= 0.92;
+
+      // Subtle pointer parallax on the entire 3D pivot
+      const targetParallaxY = pointerNDC.x > -10 ? pointerNDC.x * 0.16 : 0;
+      const targetParallaxX = pointerNDC.y > -10 ? -pointerNDC.y * 0.11 : 0;
+      if (!isPointerDown) {
+        galleryPivot.rotation.y += (targetParallaxY - galleryPivot.rotation.y) * 0.05;
+        galleryPivot.rotation.x += (targetParallaxX - galleryPivot.rotation.x) * 0.05;
+      }
+
+      // True 3D Raycasting on floating planes
+      if (pointerNDC.x > -10) {
+        raycaster.setFromCamera(pointerNDC, camera);
+        const hits = raycaster.intersectObjects(cardMeshes, false);
+        raycastedMesh = hits.length > 0 ? hits[0].object : null;
+      } else {
+        raycastedMesh = null;
+      }
+
+      if (raycastedMesh) {
+        const cIdx = raycastedMesh.userData.caseIndex;
+        currentFocusedIndex = cIdx;
+        if (hudFocusedLabel) {
+          hudFocusedLabel.textContent = `0${cIdx + 1} — ${CASE_STUDIES[cIdx].title}`;
+        }
+        if (cursorPillEl) {
+          cursorPillEl.textContent = 'VIEW';
+          cursorPillEl.classList.add('visible');
+        }
+      }
+
+      // Compute target transforms for each of the 16 cards across the 3 formations
+      cardMeshes.forEach((mesh, i) => {
+        const norm = i / TOTAL_CARDS;
+        const isHovered = raycastedMesh === mesh;
+
+        // Smooth hover interpolation
+        mesh.userData.hoverLerp += ((isHovered ? 1.0 : 0.0) - mesh.userData.hoverLerp) * 0.14;
+        const hVal = mesh.userData.hoverLerp;
+
+        // Update custom GLSL uniforms
+        const mat = shaderMaterials[i];
+        mat.uniforms.uTime.value = t + i * 0.35;
+        mat.uniforms.uHover.value = hVal;
+        mat.uniforms.uAberration.value = 0.0035 + pointerVelocityMag * 0.022 + hVal * 0.012;
+
+        if (activeFormation === 'ribbon') {
+          // 01 / HELICAL RIBBON (3D twisting DNA/spiral ribbon inspired by Mondragon)
+          const angle = norm * Math.PI * 2 + orbitAngle;
+          const x = Math.sin(angle) * 5.4;
+          const z = Math.cos(angle) * 2.65 + hVal * 0.85;
+          const y = Math.sin(angle * 2.0 + t * 0.55) * 0.92 - Math.sin(angle) * 0.65;
+
+          mesh.userData.targetPos.set(x, y, z);
+          mesh.userData.targetRot.set(
+            Math.cos(angle) * 0.18,
+            angle + Math.PI * 0.12,
+            Math.sin(angle) * 0.22
+          );
+          mesh.userData.targetScale = 1.0 + hVal * 0.2;
+
+        } else if (activeFormation === 'cluster') {
+          // 02 / SPATIAL CLUSTER (Overlapping floating 3D planes suspended in perspective depth)
+          const slot = clusterCoords[i % clusterCoords.length];
+          const depthLayer = Math.floor(i / clusterCoords.length);
+          const driftY = Math.sin(t * 1.1 + i * 0.9) * 0.14;
+          const driftX = Math.cos(t * 0.8 + i * 0.7) * 0.1;
+
+          mesh.userData.targetPos.set(
+            slot.pos[0] + driftX + depthLayer * 0.45,
+            slot.pos[1] + driftY - depthLayer * 0.25,
+            slot.pos[2] - depthLayer * 1.8 + hVal * 1.1
+          );
+          mesh.userData.targetRot.set(
+            slot.rot[0] + Math.sin(t * 0.5 + i) * 0.04,
+            slot.rot[1] + orbitAngle * 0.25,
+            slot.rot[2]
+          );
+          mesh.userData.targetScale = (depthLayer === 0 ? slot.scale : slot.scale * 0.78) + hVal * 0.22;
+
+        } else {
+          // 03 / CURVED FILMSTRIP (Concave cylindrical gallery arc)
+          const arcAngle = (norm - 0.5) * Math.PI * 1.65 + orbitAngle * 0.85;
+          const radius = 6.2;
+          const x = Math.sin(arcAngle) * radius;
+          const z = -Math.cos(arcAngle) * radius + 4.4 + hVal * 0.95;
+          const y = Math.sin(arcAngle * 1.5 + t * 0.5) * 0.22;
+
+          mesh.userData.targetPos.set(x, y, z);
+          mesh.userData.targetRot.set(0, -arcAngle, 0);
+          mesh.userData.targetScale = 1.05 + hVal * 0.22;
+        }
+
+        // Spring-smooth interpolation
+        mesh.position.lerp(mesh.userData.targetPos, 0.09);
+        mesh.rotation.x += (mesh.userData.targetRot.x - mesh.rotation.x) * 0.09;
+        mesh.rotation.y += (mesh.userData.targetRot.y - mesh.rotation.y) * 0.09;
+        mesh.rotation.z += (mesh.userData.targetRot.z - mesh.rotation.z) * 0.09;
+
+        const nextScale = mesh.scale.x + (mesh.userData.targetScale - mesh.scale.x) * 0.12;
+        mesh.scale.set(nextScale, nextScale, nextScale);
+      });
+
+      renderer.render(scene, camera);
+    }
+    renderWebGL();
+
+
+    /* =========================================================================
+       3. KINETIC TYPOGRAPHY, MASKED REVEALS & DUAL-LANE VELOCITY MARQUEE
+       ========================================================================= */
+    // Trigger Hero Baseline Reveal on load
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        const heroWord = document.getElementById('hero-reveal-word');
+        if (heroWord) heroWord.classList.add('is-revealed');
+      }, 120);
+    });
+
+    // Trigger About Me Masked Line-by-Line Reveal on Intersection
+    const manifestoContainer = document.getElementById('manifesto-lines');
+    if (manifestoContainer) {
+      const manifestoLines = manifestoContainer.querySelectorAll('.mask-reveal-item');
+      const obs = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            manifestoLines.forEach((el, idx) => {
+              setTimeout(() => el.classList.add('is-revealed'), idx * 105);
+            });
+            obs.disconnect();
+          }
+        });
+      }, { threshold: 0.2 });
+      obs.observe(manifestoContainer);
+    }
+
+    // Scroll-Velocity Physics for Masthead Skew/Tracking & Dual-Lane Opposing Marquee
+    const mastheadEl = document.getElementById('kinetic-masthead');
+    const lane1El = document.getElementById('marquee-lane-1');
+    const lane2El = document.getElementById('marquee-lane-2');
+
+    let prevScrollY = window.scrollY;
+    let scrollVel = 0;
+    let lane1X = 0;
+    let lane2X = 0;
+    let scrollDirection = -1; // -1 = scrolling down, +1 = scrolling up
+
+    window.addEventListener('scroll', () => {
+      const currY = window.scrollY;
+      const delta = currY - prevScrollY;
+      scrollVel = delta;
+      if (Math.abs(delta) > 0.5) {
+        scrollDirection = delta > 0 ? -1 : 1;
+      }
+      prevScrollY = currY;
+
+      // Feed scroll impulse into 3D ribbon twist
+      orbitVelocity += delta * 0.00016;
+    }, { passive: true });
+
+    function animateKineticTypography() {
+      requestAnimationFrame(animateKineticTypography);
+
+      // Smoothly decay scroll velocity
+      scrollVel *= 0.9;
+      const clampedSkew = Math.max(-9, Math.min(9, scrollVel * 0.2));
+      const dynamicTracking = -0.045 + Math.min(0.035, Math.abs(scrollVel) * 0.0007);
+
+      if (mastheadEl) {
+        mastheadEl.style.transform = `skewX(${-clampedSkew}deg)`;
+        mastheadEl.style.letterSpacing = `${dynamicTracking}em`;
+      }
+
+      // Dual-Lane Opposing Velocity-Reactive Marquee
+      const velocityBoost = Math.min(14, Math.abs(scrollVel) * 0.38);
+      const speed1 = 1.1 + velocityBoost;
+      const speed2 = 0.85 + velocityBoost * 0.85;
+
+      lane1X += speed1 * scrollDirection;
+      lane2X -= speed2 * scrollDirection;
+
+      if (lane1El) {
+        const half1 = lane1El.scrollWidth / 2;
+        if (lane1X <= -half1) lane1X += half1;
+        if (lane1X >= 0) lane1X -= half1;
+        lane1El.style.transform = `translate3d(${lane1X}px, 0, 0) skewX(${-clampedSkew * 0.5}deg)`;
+      }
+
+      if (lane2El) {
+        const half2 = lane2El.scrollWidth / 2;
+        if (lane2X <= -half2) lane2X += half2;
+        if (lane2X >= 0) lane2X -= half2;
+        lane2El.style.transform = `translate3d(${lane2X}px, 0, 0)`;
+      }
+    }
+    animateKineticTypography();
+
+
+    /* =========================================================================
+       4. CUSTOM MAGNETIC CURSOR & SPRING-DAMPED 3D WORK HOVER CARD
+       ========================================================================= */
+    const cursorDot = document.getElementById('magnetic-cursor-dot');
+    const workHoverCard = document.getElementById('work-hover-card');
+    const workHoverInner = document.getElementById('work-hover-card-inner');
+    const workHoverImg = document.getElementById('work-hover-img');
+
+    let pointerX = window.innerWidth / 2;
+    let pointerY = window.innerHeight / 2;
+    let cardSpringX = pointerX;
+    let cardSpringY = pointerY;
+
+    window.addEventListener('mousemove', (e) => {
+      pointerX = e.clientX;
+      pointerY = e.clientY;
+
+      if (cursorDot) {
+        cursorDot.style.left = `${pointerX}px`;
+        cursorDot.style.top = `${pointerY}px`;
+      }
+      if (cursorPillEl) {
+        cursorPillEl.style.left = `${pointerX + 22}px`;
+        cursorPillEl.style.top = `${pointerY + 24}px`;
+      }
+    });
+
+    // Attach contextual cursor pills to DOM elements
+    document.querySelectorAll('[data-cursor]').forEach(el => {
+      el.addEventListener('mouseenter', () => {
+        if (!cursorPillEl) return;
+        cursorPillEl.textContent = el.getAttribute('data-cursor');
+        cursorPillEl.classList.add('visible');
+      });
+      el.addEventListener('mouseleave', () => {
+        if (!cursorPillEl && !raycastedMesh) return;
+        if (!raycastedMesh) cursorPillEl.classList.remove('visible');
+      });
+    });
+
+    // Selected Works table rows -> Spring-damped 3D perspective card
+    document.querySelectorAll('.work-table-row').forEach(row => {
+      row.addEventListener('mouseenter', () => {
+        const idx = parseInt(row.getAttribute('data-work-idx'), 10);
+        if (workHoverImg && caseDataURLs[idx]) {
+          workHoverImg.src = caseDataURLs[idx];
+        }
+        if (workHoverCard) workHoverCard.classList.add('active');
+      });
+      row.addEventListener('mouseleave', () => {
+        if (workHoverCard) workHoverCard.classList.remove('active');
+      });
+    });
+
+    function animateWorkHoverCard() {
+      requestAnimationFrame(animateWorkHoverCard);
+      const dx = pointerX - cardSpringX;
+      const dy = pointerY - cardSpringY;
+      cardSpringX += dx * 0.14;
+      cardSpringY += dy * 0.14;
+
+      if (workHoverCard && workHoverInner) {
+        workHoverCard.style.left = `${cardSpringX}px`;
+        workHoverCard.style.top = `${cardSpringY - 30}px`;
+        const rotY = Math.max(-18, Math.min(18, dx * 0.35));
+        const rotX = Math.max(-18, Math.min(18, -dy * 0.35));
+        workHoverInner.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+      }
+    }
+    animateWorkHoverCard();
+
+
+    /* =========================================================================
+       5. PROXIMITY-REACTIVE FOOTER CTA ('LET'S BUILD')
+       ========================================================================= */
+    const ctaEl = document.getElementById('proximity-cta');
+    if (ctaEl) {
+      const rawText = ctaEl.textContent.trim();
+      ctaEl.innerHTML = rawText.split('').map(char =>
+        char === ' '
+          ? '<span class="inline-block w-[3vw]"></span>'
+          : `<span class="cta-char">${char}</span>`
+      ).join('');
+
+      const ctaChars = ctaEl.querySelectorAll('.cta-char');
+      ctaEl.addEventListener('mousemove', (e) => {
+        ctaChars.forEach(ch => {
+          const r = ch.getBoundingClientRect();
+          const cx = r.left + r.width / 2;
+          const cy = r.top + r.height / 2;
+          const dist = Math.hypot(e.clientX - cx, e.clientY - cy);
+          const influence = Math.max(0, 1 - dist / 240);
+          ch.style.transform = `translateY(${-influence * 18}px) scaleX(${1 + influence * 0.14}) skewX(${-influence * 10}deg)`;
+        });
+      });
+      ctaEl.addEventListener('mouseleave', () => {
+        ctaChars.forEach(ch => {
+          ch.style.transform = 'translateY(0px) scaleX(1) skewX(0deg)';
+        });
+      });
+    }
+
+
+    /* =========================================================================
+       6. ALABASTER / CRIMSON THEME SWITCHER (CSS + GLSL SHADER UNIFORMS)
+       ========================================================================= */
+    function toggleEditorialTheme() {
+      const isCrimson = document.body.classList.toggle('theme-crimson');
+      const dot = document.getElementById('theme-indicator-dot');
+      const brandDot = document.getElementById('brand-pulse-dot');
+
+      // Synchronize WebGL shader border uniforms with active editorial theme
+      const newBorderHex = isCrimson ? '#0D0D0D' : '#0D0D0D';
+      shaderMaterials.forEach(mat => {
+        mat.uniforms.uBorderColor.value.set(newBorderHex);
+      });
+
+      if (isCrimson) {
+        if (dot) dot.style.backgroundColor = '#F3F2EE';
+        if (brandDot) brandDot.style.backgroundColor = '#F3F2EE';
+        showToast('THEME: EDITORIAL CRIMSON (#FF2414)');
+      } else {
+        if (dot) dot.style.backgroundColor = '#FF2414';
+        if (brandDot) brandDot.style.backgroundColor = '#FF2414';
+        showToast('THEME: WARM ALABASTER (#F3F2EE)');
+      }
+    }
+
+
+    /* =========================================================================
+       7. CASE STUDY DRAWER, ACCORDION, CLIPBOARD & LIVE HKT STUDIO CLOCK
+       ========================================================================= */
+    let activeDrawerCase = 0;
+    const drawerBackdrop = document.getElementById('case-drawer-backdrop');
+
+    function populateCaseDrawer(idx) {
+      activeDrawerCase = (idx + CASE_STUDIES.length) % CASE_STUDIES.length;
+      const item = CASE_STUDIES[activeDrawerCase];
+      document.getElementById('drawer-index').textContent = item.index;
+      document.getElementById('drawer-year').textContent = item.year;
+      document.getElementById('drawer-category').textContent = item.category;
+      document.getElementById('drawer-title').textContent = item.title;
+      document.getElementById('drawer-artwork').src = caseDataURLs[activeDrawerCase];
+      document.getElementById('drawer-role').textContent = item.role;
+      document.getElementById('drawer-metric').textContent = item.metric;
+      document.getElementById('drawer-overview').textContent = item.overview;
+      document.getElementById('drawer-architecture').textContent = item.architecture;
+
+      const stackWrap = document.getElementById('drawer-stack');
+      stackWrap.innerHTML = item.stack.map(tag =>
+        `<span class="px-3 py-1.5 rounded-full border border-[#D6D4CC] bg-white/60">${tag}</span>`
+      ).join('');
+    }
+
+    function openCaseDrawer(idx) {
+      populateCaseDrawer(idx);
+      drawerBackdrop.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeCaseDrawer() {
+      drawerBackdrop.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    function navigateDrawer(dir) {
+      populateCaseDrawer(activeDrawerCase + dir);
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && drawerBackdrop.classList.contains('open')) {
+        closeCaseDrawer();
+      }
+    });
+
+    function toggleExpAccordion(el) {
+      el.classList.toggle('open');
+    }
+
+    function copyStudioEmail() {
+      const email = 'hello@sandygrg.studio';
+      const ta = document.createElement('textarea');
+      ta.value = email;
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        showToast('COPIED: HELLO@SANDYGRG.STUDIO');
+      } catch (err) {
+        console.error(err);
+      }
+      document.body.removeChild(ta);
+    }
+
+    function handleInquirySubmit(e) {
+      e.preventDefault();
+      const btn = document.getElementById('inquiry-btn');
+      const orig = btn.textContent;
+      btn.textContent = 'BRIEF TRANSMITTED ✓';
+      showToast('INQUIRY RECEIVED — REPLY WITHIN 24H');
+      e.target.reset();
+      setTimeout(() => {
+        btn.textContent = orig;
+      }, 3200);
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast-banner');
+      toast.textContent = msg;
+      toast.classList.remove('translate-y-24', 'opacity-0');
+      setTimeout(() => {
+        toast.classList.add('translate-y-24', 'opacity-0');
+      }, 2800);
+    }
+
+    // Live Hong Kong Time (HKT / Asia/Hong_Kong) Clock
+    function updateHKTClock() {
+      const el = document.getElementById('live-hkt-clock');
+      if (!el) return;
+      try {
+        const fmt = new Intl.DateTimeFormat('en-GB', {
+          timeZone: 'Asia/Hong_Kong',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        });
+        el.textContent = `${fmt.format(new Date())} HKT`;
+      } catch (err) {
+        el.textContent = '15:01:00 HKT';
+      }
+    }
+    updateHKTClock();
+    setInterval(updateHKTClock, 1000);
+  </script>
+</body>
+</html>
